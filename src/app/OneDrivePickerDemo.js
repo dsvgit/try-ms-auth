@@ -2,12 +2,12 @@ import React, { useState } from "react";
 
 import { makeIframeUrl } from "./utils";
 
-function OneDrivePickerDemo() {
+function OneDrivePickerDemo({ clientId }) {
   const [doc, setDoc] = useState(null);
 
   function launchSaveToOneDrive() {
     const odOptions = {
-      clientId: "09b331c7-5221-4605-a0ad-8c4710beae3f",
+      clientId,
       action: "save",
       sourceInputElementId: "fileUploadControl",
       sourceUri: "",
@@ -32,7 +32,7 @@ function OneDrivePickerDemo() {
 
   function openFromOneDrive() {
     const odOptions = {
-      clientId: "09b331c7-5221-4605-a0ad-8c4710beae3f",
+      clientId,
       action: "share",
       multiSelect: false,
       advanced: {},

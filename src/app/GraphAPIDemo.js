@@ -1,58 +1,66 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import * as Msal from "msal";
 
 import { graphConfig } from "./api/graphConfig";
 import { loginRequest, msalConfig } from "./api/authConfig";
 import { callMSGraph } from "./api/graph";
 
-const userAgentApplication = new Msal.UserAgentApplication(msalConfig);
-
-function getTokenPopup(request) {
-  return userAgentApplication.acquireTokenSilent(request).catch((error) => {
-    console.log(error);
-    console.log("silent token acquisition fails. acquiring token using popup");
-
-    // fallback to interaction when silent call fails
-    return userAgentApplication
-      .acquireTokenPopup(request)
-      .then((tokenResponse) => {
-        return tokenResponse;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  });
-}
-
-async function signIn() {
-  try {
-    const response = await userAgentApplication.loginPopup(loginRequest);
-    console.log("id_token acquired at: " + new Date().toString());
-    console.log(response);
-
-    if (userAgentApplication.getAccount()) {
-      console.log(userAgentApplication.getAccount());
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-async function getInfo(endpoint) {
-  try {
-    const { accessToken } = await getTokenPopup(loginRequest);
-
-    const result = await callMSGraph(endpoint, accessToken);
-
-    return result;
-  } catch (error) {
-    console.error(error);
-    return { error: error.message }
-  }
-}
-
-function GraphAPIDemo() {
+function GraphAPIDemo({ clientId }) {
   const [graphResponse, setGraphResponse] = useState(null);
+
+  let config = msalConfig;
+  config.auth.clientId = clientId;
+
+  const userAgentApplicationRef = useRef(
+    new Msal.UserAgentApplication(config)
+  );
+  const userAgentApplication = userAgentApplicationRef.current;
+
+  function getTokenPopup(request) {
+    return userAgentApplication.acquireTokenSilent(request).catch((error) => {
+      console.log(error);
+      console.log(
+        "silent token acquisition fails. acquiring token using popup"
+      );
+
+      // fallback to interaction when silent call fails
+      return userAgentApplication
+        .acquireTokenPopup(request)
+        .then((tokenResponse) => {
+          return tokenResponse;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    });
+  }
+
+  async function signIn() {
+    try {
+      const response = await userAgentApplication.loginPopup(loginRequest);
+      console.log("id_token acquired at: " + new Date().toString());
+      console.log(response);
+
+      if (userAgentApplication.getAccount()) {
+        console.log(userAgentApplication.getAccount());
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function getInfo(endpoint) {
+    try {
+      const { accessToken } = await getTokenPopup(loginRequest);
+
+      const result = await callMSGraph(endpoint, accessToken);
+
+      return result;
+    } catch (error) {
+      console.error(error);
+      return { error: error.message };
+    }
+  }
 
   return (
     <div>
